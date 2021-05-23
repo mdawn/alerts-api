@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 )
 
 var pizza = []string{"Enjoy your pizza with some delicious"}
@@ -38,6 +37,12 @@ type Response struct {
 	Low string `json:"low"`
 	Close string `json:"close"`
 	Changes []string `json:"changes"`
+}
+
+type Pricefeed []struct {
+	Pair  string   `json:"pair"`
+	Price 	string `json:"price"`
+	PercentChange24h	string `json:"percentChange24h"`
 }
 
 func commands() {
@@ -71,14 +76,20 @@ func commands() {
 			},
 		},
 		{
-			Name:    "cheese",
+			Name:    "currentPrice",
 			Aliases: []string{"c"},
-			Usage:   "Add cheese to your pizza",
+			Usage:   "Get current price for btcusd pair",
 			Action: func(c *cli.Context) {
-				ch := "cheese"
-				cheese := append(pizza, ch)
-				m := strings.Join(cheese, " ")
-				fmt.Println(m)
+				resp, err := http.Get("https://api.gemini.com/v1/pricefeed")
+
+				responseData, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					log.Fatal(err)
+				}
+			
+				var responseObject Pricefeed
+				json.Unmarshal(responseData, &responseObject)
+				//fmt.Println(responseObject.price)
 			},
 		},
 	}
