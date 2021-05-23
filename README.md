@@ -12,7 +12,7 @@ Returns
 
 ```shell
 NAME:
-   Gemini API CLI - An example CLI for some Gemini public APIs
+   Alerting Tool - Runs checks on API
 
 USAGE:
    main [global options] command [command options] [arguments...]
@@ -24,7 +24,7 @@ AUTHOR:
    mdawn
 
 COMMANDS:
-   peppers, p     Add peppers to your pizza
+   pairs, p     Lists currency trading pairs
    pineapple, pa  Add pineapple to your pizza
    cheese, c      Add cheese to your pizza
    help, h        Shows a list of commands or help for one command
@@ -32,7 +32,6 @@ COMMANDS:
 GLOBAL OPTIONS:
    --help, -h     show help
    --version, -v  print the version
-
 ```
 
 And something like
