@@ -6,6 +6,7 @@ import (
 	"github.com/urfave/cli"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"os"
 )
@@ -31,17 +32,22 @@ func main() {
 }
 
 type Ticker struct {
-	Open 	string `json:"open"`
-	High	string `json:"high"`
-	Low string `json:"low"`
-	Close string `json:"close"`
+	Open    string   `json:"open"`
+	High    string   `json:"high"`
+	Low     string   `json:"low"`
+	Close   string   `json:"close"`
 	Changes []string `json:"changes"`
 }
 
 type Pricefeed []struct {
-	Pair  string   `json:"pair"`
-	Price 	string `json:"price"`
-	PercentChange24h	string `json:"percentChange24h"`
+	Pair             string `json:"pair"`
+	Price            string `json:"price"`
+	PercentChange24h string `json:"percentChange24h"`
+}
+
+// turn our slice of strings into float64s and pop them into this beauty
+func StdDev(xs []float64) float64 {
+	return math.Sqrt(Variance(xs))
 }
 
 func commands() {
@@ -56,17 +62,17 @@ func commands() {
 					fmt.Println("Error:", err)
 					os.Exit(1)
 				}
-			
+
 				responseData, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
 					log.Fatal(err)
 				}
-			
+
 				var responseObject Ticker
 				json.Unmarshal(responseData, &responseObject)
-			
+
 				currentPriceFake := 4000
-			
+
 				fmt.Println("Open price: ", responseObject.Open)
 				fmt.Println("High price: ", responseObject.High)
 				fmt.Println("Low price: ", responseObject.Low)
@@ -85,7 +91,7 @@ func commands() {
 				if err != nil {
 					log.Fatal(err)
 				}
-			
+
 				var responseObject Pricefeed
 				json.Unmarshal(responseData, &responseObject)
 				fmt.Println(responseObject)
@@ -93,5 +99,3 @@ func commands() {
 		},
 	}
 }
-
-
