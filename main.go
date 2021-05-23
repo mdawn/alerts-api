@@ -6,10 +6,12 @@ import (
 	"github.com/urfave/cli"
 	"io/ioutil"
 	"log"
-	// "math"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/aclements/go-moremath/stats"
 )
 
 func info() {
@@ -43,26 +45,6 @@ type Pricefeed []struct {
 	Price            string `json:"price"`
 	PercentChange24h string `json:"percentChange24h"`
 }
-
-var p []float64
-
-// ConvertSlice converts the given slice of string values to floating points
-func ConvertSlice(xs []string) (p []float64) {
-	for _, arg := range xs[1:] {
-		n, err := strconv.ParseFloat(arg, 64)
-		if err != nil {
-			panic(err)
-		}
-		p = append(p, n)
-	}
-	return p
-
-}
-
-// StdDev returns the standard deviation of our floating point slice of values
-// func StdDev(xs []float64) float64 {
-// 	return math.Sqrt(Variance(xs))
-// }
 
 func commands() {
 	app.Commands = []cli.Command{
@@ -130,9 +112,68 @@ func commands() {
 				var responseObject Ticker
 				json.Unmarshal(responseData, &responseObject)
 				hourlies := ConvertSlice(responseObject.Changes)
+				deviation := StdDev(hourlies)
 
-				fmt.Println("Converted Hourly Prices: ", hourlies)
+				fmt.Println("Standard deviation: ", deviation)
+			},
+		},
+		{
+			Name:    "average",
+			Aliases: []string{"v"},
+			Usage:   "Get the average price for BTCUSD pair over the last 24 hours",
+			Action: func(c *cli.Context) {
+				resp, err := http.Get("https://api.gemini.com/v2/ticker/btcusd")
+				if err != nil {
+					fmt.Println("Error:", err)
+					os.Exit(1)
+				}
+
+				responseData, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				var responseObject Ticker
+				json.Unmarshal(responseData, &responseObject)
+				hourlies := ConvertSlice(responseObject.Changes)
+				average := Average(hourlies)
+
+				fmt.Println("Average: ", average)
 			},
 		},
 	}
+}
+
+//
+// BEGIN UTILS
+//
+
+var p []float64
+
+// ConvertSlice converts the given slice of string values to floating points
+func ConvertSlice(xs []string) (p []float64) {
+	for _, arg := range xs[1:] {
+		n, err := strconv.ParseFloat(arg, 64)
+		if err != nil {
+			panic(err)
+		}
+		p = append(p, n)
+	}
+	return p
+
+}
+
+// StdDev returns the standard deviation of our floating point slice of 24 hour values
+func StdDev(k []float64) float64 {
+	return math.Sqrt(stats.Variance(k))
+}
+
+
+// Average returns the average of our floating point slice of 24 hour values
+func Average(v []float64) float64 {
+	var t float64 = 0
+	for _, value := range v {
+		t += value
+	}
+	return t / float64(len(v))
 }
