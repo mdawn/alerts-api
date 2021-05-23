@@ -6,12 +6,11 @@ import (
 	"github.com/urfave/cli"
 	"io/ioutil"
 	"log"
-	"math"
+	// "math"
 	"net/http"
 	"os"
+	"strconv"
 )
-
-var pizza = []string{"Enjoy your pizza with some delicious"}
 
 func info() {
 	app.Name = "Alerting Tool"
@@ -45,17 +44,32 @@ type Pricefeed []struct {
 	PercentChange24h string `json:"percentChange24h"`
 }
 
-// turn our slice of strings into float64s and pop them into this beauty
-func StdDev(xs []float64) float64 {
-	return math.Sqrt(Variance(xs))
+var p []float64
+
+// ConvertSlice converts the given slice of string values to floating points
+func ConvertSlice(xs []string) (p []float64) {
+	for _, arg := range xs[1:] {
+		n, err := strconv.ParseFloat(arg, 64)
+		if err != nil {
+			panic(err)
+		}
+		p = append(p, n)
+	}
+	return p
+
 }
+
+// StdDev returns the standard deviation of our floating point slice of values
+// func StdDev(xs []float64) float64 {
+// 	return math.Sqrt(Variance(xs))
+// }
 
 func commands() {
 	app.Commands = []cli.Command{
 		{
 			Name:    "btcusd",
 			Aliases: []string{"b"},
-			Usage:   "Ticker for btcusd",
+			Usage:   "Ticker for BTCUSD pair",
 			Action: func(c *cli.Context) {
 				resp, err := http.Get("https://api.gemini.com/v2/ticker/btcusd")
 				if err != nil {
@@ -71,19 +85,16 @@ func commands() {
 				var responseObject Ticker
 				json.Unmarshal(responseData, &responseObject)
 
-				currentPriceFake := 4000
-
 				fmt.Println("Open price: ", responseObject.Open)
 				fmt.Println("High price: ", responseObject.High)
 				fmt.Println("Low price: ", responseObject.Low)
-				fmt.Println("Current price: ", currentPriceFake)
 				fmt.Println("Hourly prices per last 24 hours :", responseObject.Changes)
 			},
 		},
 		{
 			Name:    "currentPrice",
 			Aliases: []string{"c"},
-			Usage:   "Get current price for btcusd pair",
+			Usage:   "Get current price for BTCUSD pair",
 			Action: func(c *cli.Context) {
 				resp, err := http.Get("https://api.gemini.com/v1/pricefeed")
 
@@ -92,9 +103,35 @@ func commands() {
 					log.Fatal(err)
 				}
 
+				currentPriceFake := 4000
+				fmt.Println("Current price: ", currentPriceFake)
+
 				var responseObject Pricefeed
 				json.Unmarshal(responseData, &responseObject)
 				fmt.Println(responseObject)
+			},
+		},
+		{
+			Name:    "deviation",
+			Aliases: []string{"d"},
+			Usage:   "Get standard deviation for BTCUSD pair",
+			Action: func(c *cli.Context) {
+				resp, err := http.Get("https://api.gemini.com/v2/ticker/btcusd")
+				if err != nil {
+					fmt.Println("Error:", err)
+					os.Exit(1)
+				}
+
+				responseData, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				var responseObject Ticker
+				json.Unmarshal(responseData, &responseObject)
+				hourlies := ConvertSlice(responseObject.Changes)
+
+				fmt.Println("Converted Hourly Prices: ", hourlies)
 			},
 		},
 	}
