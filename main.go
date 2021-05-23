@@ -30,8 +30,7 @@ func main() {
 	}
 }
 
-type Response struct {
-	Symbol  string   `json:"symbol"`
+type Ticker struct {
 	Open 	string `json:"open"`
 	High	string `json:"high"`
 	Low string `json:"low"`
@@ -63,16 +62,16 @@ func commands() {
 					log.Fatal(err)
 				}
 			
-				var responseObject Response
+				var responseObject Ticker
 				json.Unmarshal(responseData, &responseObject)
 			
 				currentPriceFake := 4000
 			
-				fmt.Println(responseObject.Symbol)
-				fmt.Println(responseObject.High)
-				fmt.Println(responseObject.Low)
-				fmt.Printf("%s\n", responseObject.Changes)
-				fmt.Println(currentPriceFake)
+				fmt.Println("Open price: ", responseObject.Open)
+				fmt.Println("High price: ", responseObject.High)
+				fmt.Println("Low price: ", responseObject.Low)
+				fmt.Println("Current price: ", currentPriceFake)
+				fmt.Println("Hourly prices per last 24 hours :", responseObject.Changes)
 			},
 		},
 		{
@@ -89,7 +88,7 @@ func commands() {
 			
 				var responseObject Pricefeed
 				json.Unmarshal(responseData, &responseObject)
-				//fmt.Println(responseObject.price)
+				fmt.Println(responseObject)
 			},
 		},
 	}
